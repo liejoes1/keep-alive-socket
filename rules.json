@@ -1,1 +1,1 @@
-{"root":{"error_check":[{"name":"ubuntu_start_tunnel.sh","error":true}],"latest_data":{"name":"ubuntu_start_tunnel.sh","error":true}}}
+{"error_check":[{"name":"ubuntu_start_tunnel.sh","error":true},{"name":"ubuntu start_tunnel.sh[2469]: connect_to localhost: unknown host (Bad file descriptor)","error":false}],"latest_data":{"name":"Feb 15 23:29:20 ubuntu start_tunnel.sh[2469]: connect_to localhost: unknown host (Bad file descriptor)","error":false}}
