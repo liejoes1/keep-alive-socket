@@ -2,8 +2,7 @@
 // connect to localhost port 2812: unknown host (Bad file Descriptor) -> all cannot
 var http = require('http');
 var fs = require('fs');
-const _ = require('lodash');
-const url_to_check = "http://jlie.serveo.net";
+const url_to_check = "http://jlie.serveo.net:2812";
 
 
 // Loading the index file . html displayed to the client
@@ -26,7 +25,7 @@ io.sockets.on('connection', function (socket) {
 server.listen(8080);
 
 io.sockets.on('connection', function (socket) {
-
+    let obj = JSON.parse(fs.readFileSync('./rules.json', 'utf8'));
     // When the server receives a “message” type signal from the client   
     socket.on('message', function (message) {
         // Check Message existed earlier.       
@@ -50,12 +49,12 @@ io.sockets.on('connection', function (socket) {
             return !this[a.name] && (this[a.name] = true);
         }, Object.create(null));
 
-        let obj = JSON.parse(fs.readFileSync('./rules.json', 'utf8'));
+        
 
         for (let i = 0; i < splittedData.length; i++) {
 
             for (let j = 0; j < obj.error_check.length; j++) {
-                if (obj.error_check[j].name == splittedData[i]['name']) {
+                if (obj.error_check[j].name['name'] == splittedData[i]['name']) {
                     // Data Existed, just put in latest
 
                     splittedData[i]["found"] = true;
@@ -63,6 +62,17 @@ io.sockets.on('connection', function (socket) {
                     obj.latest_data.error = obj.error_check[j].error;
                     // Save the data
                     fs.writeFileSync('./rules.json', JSON.stringify(obj));
+
+                    // If have error, reset server
+                    if (splittedData[i]['error'])
+                    {
+                        obj.latest_data.name = 'Socket is idle, prepare to reboot';
+                        obj.latest_data.error = true;
+                        // Save the data
+                        fs.writeFileSync('./rules.json', JSON.stringify(obj));
+                        // Save Data to the latest update
+                        socket.emit('action', 'reboot');
+                    }
                 }
             }
         }
@@ -83,19 +93,25 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('disconnect', function (message) {
-        //do stuff
-        socket.id
+        // Either reboot or critical error
+        obj.latest_data.name = 'Socket is disconnected';
+        obj.latest_data.error = true;
+        // Save the data
+        fs.writeFileSync('./rules.json', JSON.stringify(obj));
         console.log('A client has been disconnected' + message);
     });
 
     // Socket Idle Handler
     setInterval(function () {
-        //socket.emit('message', 'idle');
-        var timeDiffinM = (new Date().getTime() - fs.statSync("./rules.json").mtimeMs) / 60000;
+        let timeDiffinM = (new Date().getTime() - fs.statSync("./rules.json").mtimeMs) / 60000;
         //console.log(timeDiffinM);
-        if (timeDiffinM > 30) {
+        if (timeDiffinM > 15) {
+            obj.latest_data.name = 'Socket is idle, prepare to reboot';
+            obj.latest_data.error = true;
+            // Save the data
+            fs.writeFileSync('./rules.json', JSON.stringify(obj));
             // Save Data to the latest update
-
+            socket.emit('action', 'reboot');
             console.log(timeDiffinM);
         }
     }, 10000);
