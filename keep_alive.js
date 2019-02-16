@@ -2,8 +2,6 @@
 // connect to localhost port 2812: unknown host (Bad file Descriptor) -> all cannot
 var http = require('http');
 var fs = require('fs');
-var date = require('date-and-time');
-
 const url_to_check = "http://jlie.serveo.net";
 
 
@@ -27,7 +25,7 @@ io.sockets.on('connection', function (socket) {
 server.listen(8080);
 
 io.sockets.on('connection', function (socket) {
-
+    
     // When the server receives a “message” type signal from the client   
     socket.on('message', function (message) {
         // Check Message existed earlier.       
@@ -85,7 +83,7 @@ io.sockets.on('connection', function (socket) {
 
 
 
-        //socket.emit('message', 'You are connected!');
+        //
     });
 
     socket.on('disconnect', function (message) {
@@ -93,6 +91,19 @@ io.sockets.on('connection', function (socket) {
         socket.id
         console.log('A client has been disconnected' + message);
     });
+    
+    // Socket Idle Handler
+    setInterval(function() {  
+        socket.emit('message', 'idle');
+        var timeDiffinM = (new Date().getTime() - fs.statSync("./rules.json").mtimeMs)/60000;
+        //console.log(timeDiffinM);
+        if (timeDiffinM > 1)
+        {
+            // Save Data to the latest update
+            
+            console.log(timeDiffinM);
+        } 
+    }, 10000);
 });
 
 function checkWebsiteStatus() {
@@ -114,3 +125,4 @@ function removeDate(orig) {
         orig[i] = orig[i].substring(16);
     }
 }
+
