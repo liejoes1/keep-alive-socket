@@ -104,7 +104,9 @@ io.sockets.on('connection', function (socket) {
     // Socket Idle Handler
     setInterval(function () {
         let timeDiffinM = (new Date().getTime() - fs.statSync("./rules.json").mtimeMs) / 60000;
+        console.log(timeDiffinM);
         //console.log(timeDiffinM);
+        
         if (timeDiffinM > 15) {
             obj.latest_data.name = 'Socket is idle, prepare to reboot';
             obj.latest_data.error = true;
@@ -112,7 +114,6 @@ io.sockets.on('connection', function (socket) {
             fs.writeFileSync('./rules.json', JSON.stringify(obj));
             // Save Data to the latest update
             socket.emit('action', 'reboot');
-            console.log(timeDiffinM);
         }
     }, 10000);
 });
@@ -128,11 +129,5 @@ function checkWebsiteStatus() {
             return false;
         }
     });
-}
-
-function removeDate(orig) {
-    for (let i = 0; i < orig.length; i++) {
-        orig[i] = orig[i]['name'].substring(16);
-    }
 }
 
